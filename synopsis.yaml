@@ -1,0 +1,61 @@
+---
+ program:
+   sleep:
+     cmd: "sleep 1000", mandatory
+     cmd_amt: 10, 1 by default
+     auto_start: true/false, True by default
+     auto_restart: always/never/"unexpected", never by default
+     exit_code: none/(specific code), 0 by default
+     start_time: 5, 5 by default
+     retry_time: 3, 3 by default
+     sig_for_stop: TERM/QUIT/INT/KILL, TERM by default
+     stdout: (pathname), none(discard) by default
+     stderr: (pathname), none(discard) by default
+	 env: true/false, true by default
+     cwd: (pathname), the current by default
+     umask: 022, 644 by default
+     logging: none/(pathname), none by default
+
+ commandsToImplement:
+   status: see the status of all the programs described in the config file
+   start: program
+   restart: program
+   stop: program
+   exit: exit taskmaster
+   reload: reload configfile
+
+ classes:
+   funcs:
+   - status
+	 - start
+	 - restart
+	 - stop
+	 - reload
+	 - exit
+	 - helps
+   configs:
+    - cmd
+	  - cmd_amt
+	  - auto_start
+	 - auto_restart
+	 - exit_code
+	 - start_Time
+	 - retry_Time
+	 - sig_for_stop
+	  - stdout
+	  - stderr
+	  - env
+	  - cwd
+	  - umask
+	 - logging
+
+
+#needs relattionship
+name:
+  - programs
+cmd:
+  - programs
+cmd_amd:
+  - 
+
+- tokenizing string: shlex.split

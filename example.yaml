@@ -1,0 +1,27 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    example.yaml                                       :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2020/08/12 13:42:40 by tango             #+#    #+#              #
+#    Updated: 2020/08/14 17:53:18 by ihwang           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+---
+  program:
+    sleeper:
+      cmd: 'foo'
+      cmd_amt: 4
+      auto_restart: 5
+    ls:
+      cmd: 'ls'
+      cmd_amt: 2
+      auto_start: 10
+    mv:
+      cmd: 'mv'
+      cmd_amt: 5
+      stdout: ./foo.txt
+      stderr: ./foo.txt
