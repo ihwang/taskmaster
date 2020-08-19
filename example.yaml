@@ -6,22 +6,39 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/12 13:42:40 by tango             #+#    #+#              #
-#    Updated: 2020/08/14 17:53:18 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/19 01:10:42 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 ---
   program:
-    sleeper:
-      cmd: 'foo'
-      cmd_amt: 4
-      auto_restart: 5
-    ls:
-      cmd: 'ls'
-      cmd_amt: 2
-      auto_start: 10
-    mv:
-      cmd: 'mv'
-      cmd_amt: 5
-      stdout: ./foo.txt
-      stderr: ./foo.txt
+    sleep:
+      cmd: 'sleep 20'
+      cmd_amt: 1
+      auto_start: True
+      auto_restart: "unexpected"
+      retry_time: 5
+      running_time: 10
+      working_dir: '/Users/tango/42/taskmaster'
+      umask: 644
+
+     # stderr: ./foo1.txt
+   # sleeper:
+   #   cmd: 'rm noexist'
+   #   cmd_amt: 4
+     # expected_exit: 0
+     # auto_restart: "unexpected"
+     # retry_time: 3
+     # stdout: ./foo2.txt
+     # stderr: ./foo2.txt
+     # auto_start: true
+    #mv:
+    #  cmd: 'mv'
+    #  cmd_amt: 5
+    #  expected_exit: -64
+    #  auto_restart: "unexpected"
+    #  retry_time: 3
+    #  stdout: ./foo.txt
+    #  stderr: ./foo.txt
+    #  auto_start: true
+

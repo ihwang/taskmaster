@@ -32,21 +32,22 @@
 	 - stop
 	 - reload
 	 - exit
-	 - helps
+	  - helps
    configs:
     - cmd
 	  - cmd_amt
 	  - auto_start
-	 - auto_restart
-	 - exit_code
-	 - start_Time
-	 - retry_Time
-	 - sig_for_stop
+	  - auto_restart
+	  - expected_exit
+	  - retry_Time
+    - running_time
 	  - stdout
 	  - stderr
 	  - env
 	  - cwd
 	  - umask
+	 - sig_for_stop
+   - time_for_killing
 	 - logging
 
 

@@ -1,6 +1,8 @@
 import cmd
 import signal
 import subprocess
+import threading
+import os
 
 from taskmaster import get_check_raw_yaml
 from setconfig import creat_full_config
@@ -30,31 +32,61 @@ class Commands(cmd.Cmd):
         self.doc_header = "Availiable commands"
         cmd.Cmd.emptyline(self)
 
-    def redirect_stdout_stderr(self, i):
-        program = self.programs[i]
-        if program._stdout == "discard":
-            program._stdout_fd = subprocess.DEVNULL
-        else:
-            program._stdout_fd = open(program._stdout, mode="a",
-            encoding="utf-8")
-        if program._stderr == "discard":
-            program._stderr_fd = subprocess.DEVNULL
-        else:
-            program._stderr_fd = open(program._stderr, mode="a",
-            encoding="utf-8")
+    def redirect_stdout_stderr(self, program):
+        for i in range(program._cmd_amt):
+            if program._stdout == "discard":
+                program._processes[i]._stdout_fd = subprocess.DEVNULL
+            else:
+                program._processes[i]._stdout_fd = open(program._stdout, "a",
+                    encoding="utf-8")
+                os.chmod(program._stdout, 0o644)
+            if program._stderr == "discard":
+                program._processes[i]._stderr_fd = subprocess.DEVNULL
+            else:
+                program._processes[i]._stderr_fd = open(program._stdout, "a",
+                    encoding="utf-8")
+                os.chmod(program._stderr, 0o644)
 
-        #subprocess.Popen("ls", excutable="/bin/bash", stdout=fd or DEVNULL, close_fds=False, cwd=path, restore_signals=False)
-    def run_command(self, i):
-        program = self.programs[i]
-        self.redirect_stdout_stderr(i)
-        for count in range(0, program._cmd_amt):
-            program._procs.append(subprocess.Popen(program._cmd,
-                executable="/bin/bash", stdout=program._stdout_fd,
-                stderr=program._stdout_fd, close_fds=False,
-                cwd=program._pwd, env=program._env ,shell=True))
-            program._stdout_fd.close()
-            program._stderr_fd.close()
+    def run_single_process(self, P, p):
+        retry_count = 0
+        temp_umask = os.umask(self.programs[P]._processes[p]._umask)
+        while True:
+            self.redirect_stdout_stderr(self.programs[P])
+            os.umask(self.programs[P]._processes[p]._umask)
+            self.programs[P]._processes[p]._pid.append\
+                (subprocess.Popen(self.programs[P]._cmd,
+                stdout=self.programs[P]._stdout_fd,
+                stderr=self.programs[P]._stderr_fd,
+                close_fds=False, cwd=self.programs[P]._wd,
+                env=self.programs[P]._env))
+            try:
+                self.programs[P]._processes[p]._pid[-1].wait(self.programs[P]._running_time)
+            except subprocess.TimeoutExpired:
+                flag_timeout = True
+                self.programs[P]._processes[p]._pid[-1].wait()
+            else:
+                flag_timeout = False
+            if self.programs[P]._auto_restart == True:
+                continue
+            elif self.programs[P]._auto_restart == "unexpected":
+                if retry_count < self.programs[P]._retry_time and \
+                    (self.programs[P]._expected_exit != \
+                        self.programs[P]._processes[p]._pid[-1].returncode or \
+                        flag_timeout is False):
+                    retry_count += 1
+                    continue
+            break
+        os.umask(temp_umask)
 
+    def single_program(self, idx_p):
+        for i in range(self.programs[idx_p]._cmd_amt):
+            self.programs[idx_p]._thread.append( \
+                threading.Thread(target=self.run_single_process,
+                name=self.programs[idx_p]._name,
+                args=(idx_p, i),
+                daemon=True))
+            self.programs[idx_p]._thread[i].start()
+        
     def emptyline(self):
         pass
 
@@ -66,6 +98,7 @@ class Commands(cmd.Cmd):
     def do_exit(self, notused):
         'exit the taskmaster shell'
         exit(0)
+        return 0
 
     def do_reload(self, notused):
         'update the configuration file to the changed'
@@ -78,15 +111,15 @@ class Commands(cmd.Cmd):
 
     def do_start(self, name):
         'start'
-        i = 0
+        idx_p = 0
         for p in self.programs:
-            if p._name == name and p._start_status is True:
+            if p._name == name and p._start_status != "NotStarted":
                 print("%(name)s has been already" %{"name": p._name}, end="")
                 print(" started. Check \'status\' command or \'restart\' it.")
-                return 1
             elif p._name == name:
-                self.run_command(i)
-            i += 1
+                self.single_program(idx_p)
+                p._start_status = "Running"
+            idx_p += 1
 
     def do_restart(self, name):
         'restart'
