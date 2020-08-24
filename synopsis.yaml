@@ -2,19 +2,19 @@
  program:
    sleep:
      cmd: "sleep 1000", mandatory
-     cmd_amt: 10, 1 by default
-     auto_start: true/false, True by default
-     auto_restart: always/never/"unexpected", never by default
-     exit_code: none/(specific code), 0 by default
-     start_time: 5, 5 by default
-     retry_time: 3, 3 by default
-     sig_for_stop: TERM/QUIT/INT/KILL, TERM by default
+     numprocs: 10, 1 by default
+     umask: 022, 022 by default
+     workingdir: (pathname), the current by default
+     autostart: true/false, True by default
+     autorestart: always/never/"unexpected", never by default
+     exitcode: none/(specific code), 0 by default
+     startretries: 3, 3 by default
+     starttime: 5, 5 by default
+     stopsignal: TERM/QUIT/INT/, TERM by default
+     stoptime:
      stdout: (pathname), none(discard) by default
      stderr: (pathname), none(discard) by default
-	 env: true/false, true by default
-     cwd: (pathname), the current by default
-     umask: 022, 644 by default
-     logging: none/(pathname), none by default
+	   env: true/false, true by default
 
  commandsToImplement:
    status: see the status of all the programs described in the config file
@@ -24,7 +24,6 @@
    exit: exit taskmaster
    reload: reload configfile
 
- classes:
    funcs:
    - status
 	 - start
@@ -33,23 +32,6 @@
 	 - reload
 	 - exit
 	  - helps
-   configs:
-    - cmd
-	  - cmd_amt
-	  - auto_start
-	  - auto_restart
-	  - expected_exit
-	  - retry_Time
-    - running_time
-	  - stdout
-	  - stderr
-	  - env
-	  - cwd
-	  - umask
-	 - sig_for_stop
-   - time_for_killing
-	 - logging
-
 
 #needs relattionship
 name:

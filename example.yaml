@@ -6,21 +6,29 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/12 13:42:40 by tango             #+#    #+#              #
-#    Updated: 2020/08/19 01:10:42 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/25 03:08:12 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 ---
   program:
     sleep:
-      cmd: 'sleep 20'
-      cmd_amt: 1
-      auto_start: True
-      auto_restart: "unexpected"
-      retry_time: 5
-      running_time: 10
-      working_dir: '/Users/tango/42/taskmaster'
+      cmd: 'ls -R .'
+      numprocs: 1
+      autostart: True
+      autorestart: "unexpected"
+      startretries: 5
+      starttime: 0
+      stopsignal: "INT"
+      stoptime: 3
+      workingdir: '/Users/tango/42/taskmaster'
       umask: 644
+      stdout: '/Users/tango/42/taskmaster/lsfoo'
+
+    sleeplonger:
+      cmd: 'sleep 50'
+      numprocs: 1
+      autostart: True
 
      # stderr: ./foo1.txt
    # sleeper:

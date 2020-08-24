@@ -28,8 +28,7 @@ class Program:
 
 class Process:
     def __init__(self):
-        self._pid = []
-        self._process_status = "NotStarted" #"Not started"/"Running"/"Exited"
+        self._pid = None
 
 
 def spaces_in(raw_yaml):
