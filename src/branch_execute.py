@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    branch_execute.py                                  :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2020/08/25 03:24:58 by tango             #+#    #+#              #
+#    Updated: 2020/08/26 02:53:53 by ihwang           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 import logging as log
 import os
 import subprocess
@@ -5,9 +17,10 @@ import time
 import threading
 import signal
 
-from server import *
-from programs import *
-#from start import *
+from src.server import *
+from src.programs import *
+from src.status import *
+from src.feedback import recvall, recv_one_message, send_one_message
 
 class Execute:
     def __init__(self, programs):
@@ -23,25 +36,8 @@ class Execute:
         self.auto_start(server)
 
     def status(self, name, server):
-        pass
-
-    def start(self, name, server):
-        ever_started = False
-        for p in self._programs:
-            if p._name == name and p._start_status != "NotStarted":
-                feedback = name + " has been already started. Try \'restart\' or \'status\'"
-                send_one_message(server._conn, "feedback_start")
-                log.info("server: %(n)s has been already started.", {"n": name})
-                send_one_message(server._conn, feedback)
-                return
-            elif p._name == name:
-                log.info("server: The name of the program should be executed is %(pn)s, %(n)s", {"pn": p._name, "n": name})
-                ever_started = True
-                threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
-        if ever_started is False:
-            log.info("server: Not able to find such program name")
-            send_one_message(server._conn, "feedback_start")
-            send_one_message(server._conn, "Not able to find such program name")
+        log.info("server: %(n)s\'s status has been requested to be sent to client", {"n": name})
+        send_status(self._programs, name, server)
 
     def run_program(self, prog):
         retry_count = 0
@@ -50,13 +46,13 @@ class Execute:
         while True:
             redirect_stdout_stderr(prog)
             os.umask(prog._umask)
+            prog._start_status = "Running"
             prog._pid = subprocess.Popen(prog._cmd,
                                 stdout=prog._stdout_fd,
                                 stderr=prog._stderr_fd,
                                 close_fds=False,
                                 cwd=prog._workingdir,
                                 env=prog._env)
-            prog._start_status = "Running"
             log.info("server: %(name)s has been executed", {"name": prog._name})
             try:
                 prog._pid.wait(prog._starttime)
@@ -84,8 +80,41 @@ class Execute:
             break
         os.umask(temp_umask)
 
+    def start(self, name, server):
+        ever_started = False
+        for p in self._programs:
+            if p._name == name and p._start_status != "NotStarted":
+                feedback = name + " has been already started. Try \'restart\' or \'status\'"
+                send_one_message(server._conn, "feedback_start")
+                log.info("server: %(n)s has been already started.", {"n": name})
+                send_one_message(server._conn, feedback)
+                return
+            elif p._name == name:
+                log.info("server: The name of the program should be executed is %(pn)s", {"pn": p._name})
+                ever_started = True
+                threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
+        if ever_started is False:
+            log.info("server: Not able to find such program name")
+            send_one_message(server._conn, "feedback_start")
+            send_one_message(server._conn, "server: Not able to find such program name")
+
     def restart(self, name, server):
-        pass
+        ever_started = False
+        for p in self._programs:
+            if p._name == name and p._start_status == "Exited":
+                log.info("server: The name of the program should be restart is %(pn)s", {"pn": p._name})
+                ever_started = True
+                threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
+            elif p._name == name and (p._start_status == "NotStarted" or p._start_status == "Running"):
+                feedback = name + " is on running or never started. Try \'status\' or \'start\'"
+                log.info("server: %(n)s is on running or never started.", {"n": name})
+                send_one_message(server._conn, "feedback_restart")
+                send_one_message(server._conn, feedback)
+                return
+        if ever_started is False:
+            log.info("server: Not able to find such program name")
+            send_one_message(server._conn, "feedback_restart")
+            send_one_message(server._conn, "server: Not able to find such program name")
 
     def auto_start(self, server):
         log.info("server: \'auto_start\' has been executed")
@@ -105,10 +134,11 @@ class Execute:
             if job == "status":
                 self.status(name, server)
             elif job == "start":
-                log.info("server: %(n)s has been requested to be started by a command", {"n": name})
                 self.start(name, server)
             elif job == "restart":
                 self.restart(name, server)
+            elif job == "stop":
+                pass
 
 def redirect_stdout_stderr(program):
     if program._stdout == "discard":

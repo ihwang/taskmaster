@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    taskmasterctl.py                                   :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2020/08/25 03:24:41 by tango             #+#    #+#              #
+#    Updated: 2020/08/26 02:34:41 by ihwang           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 import yaml
 import sys
 import cmd
@@ -6,9 +18,8 @@ import socket
 import threading
 import time
 
-from feedback import *
+from src.feedback import *
 
-BUFF_SIZE = 4096
 port_file = "/tmp/.TM_port_server"
 log_file = "/tmp/TM_log.txt"
 
@@ -53,6 +64,8 @@ class Commands(cmd.Cmd):
     def do_reload(self, notused):
         'update the configuration file to the changed'
         config = get_check_raw_yaml()
+        if len(notused) > 0:
+            print("taskmasterctl: Retry with no arguments", file=sys.stderr)
         if config == False:
             pass
         else:
@@ -61,23 +74,39 @@ class Commands(cmd.Cmd):
             self.client.send_config(config)
 
     def do_status(self, name):
-        'status'
+        'usage: status [programname]\nNo argument will get every single status'
         status = "status"
-        self.client._sock.sendall(status.encode())
-        self.client._sock.sendall(name.encode())
-
-    def do_start(self, name):
-        'start'
-        start = "start"
-        send_one_message(self.client._sock, start)
+        send_one_message(self.client._sock, status)
+        log.debug("client: sent the server requesting status")
         send_one_message(self.client._sock, name)
         time.sleep(0.01)
 
+    def do_start(self, name):
+        'usage: start programname (with no whitespace)'
+        if len(name) < 1:
+            print("usage: start programname", file=sys.stderr)
+        elif " " in name:
+            print("taskmasterctl: Possible to take only one arg", file=sys.stderr)
+        else:
+            start = "start"
+            send_one_message(self.client._sock, start)
+            send_one_message(self.client._sock, name)
+            time.sleep(0.01)
+
     def do_restart(self, name):
-        'restart'
-        restart = "restart"
-        self.client._sock.sendall(restart.encode())
-        self.client._sock.sendall(name.encode())
+        'usage: restart programname (with no whitespace)'
+        if len(name) < 1:
+            print("usage: restart programname", file=sys.stderr)
+        elif " " in name:
+            print("taskmasterctl: Possible to take only one arg", file=sys.stderr)
+        else:
+            restart = "restart"
+            send_one_message(self.client._sock, restart)
+            send_one_message(self.client._sock, name)
+            time.sleep(0.01)
+    
+    def do_stop(self, name):
+        'stop'
 
 def find_space(raw_yaml):
     for key in raw_yaml["program"]:
@@ -91,25 +120,25 @@ def get_check_raw_yaml():
 
     wrong_name = find_space(raw_yaml)
     if "program" not in raw_yaml:
-        print("taskmaster: Wrong config \'program:\' sholud be preceedded", file=sys.stderr)
+        print("taskmasterctl: Wrong config \'program:\' sholud be preceedded", file=sys.stderr)
         return False
     elif wrong_name != False:
-        print("A white space is not allowed in the program name \'", wrong_name,
+        print("taskmasterctl: A white space is not allowed in the program name \'", wrong_name,
             "\'", sep="", file=sys.stderr)
         return False
     elif raw_yaml["program"] == None:
-        print("taskmaster: Specify one program at least under the \'program\'", file=sys.stderr)
+        print("taskmasterctl: Specify one program at least under the \'program\'", file=sys.stderr)
         return False
     for key, value in raw_yaml["program"].items():
         if "cmd" not in value:
-            print("taskmaster: the program \'", key, "\' needs a \'cmd\' to execute", sep="", file=sys.stderr)
+            print("taskmasterctl: the program \'", key, "\' needs a \'cmd\' to execute", sep="", file=sys.stderr)
             return False
     return raw_yaml
 
 
 def main():
     if len(sys.argv) != 2:
-        print("taskmaster: Usage: taskmaster.py [configfile]", file=sys.stderr)
+        print("taskmasterctl: Usage: taskmaster.py [configfile]", file=sys.stderr)
         exit(1)
     config = get_check_raw_yaml()
     if config == False:

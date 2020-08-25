@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    taskmasterd.py                                     :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2020/08/25 03:24:46 by tango             #+#    #+#              #
+#    Updated: 2020/08/26 02:31:50 by ihwang           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 import socket
 import os
 import sys
@@ -6,11 +18,11 @@ import threading
 import signal
 import logging as log
 
-
-from branch_execute import *
-from go_daemon import *
-from server import *
-from programs import *
+from src.branch_execute import *
+from src.go_daemon import *
+from src.server import *
+from src.programs import *
+from src.feedback import recvall, recv_one_message, send_one_message
 
 g_programs = list()
 server = None
@@ -64,15 +76,18 @@ def main():
     execute = Execute(g_programs)
     execute.auto_start(server)
     listen_signals()
+
     while True:
         execute.reload_status = False
-        data = recv_one_message(server._conn)
-        if data == "disconnected":
+        job = recv_one_message(server._conn)
+        if job == "disconnected":
             log.info("The client %(addr)s has been disconnected", {"addr": server._client_addr})
-            g_programs = create_configured_programs(server.wait_for_connect())
+            server.wait_for_connect()
+            g_programs = create_configured_programs(server._config)
             execute.load_programs(g_programs)
+            execute.auto_start(server)
         else:
-            execute.execute_msg(execute, server, data)
+            execute.execute_msg(execute, server, job)
             
 if __name__ == "__main__":
     main()

@@ -6,14 +6,14 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/12 13:42:40 by tango             #+#    #+#              #
-#    Updated: 2020/08/25 03:08:12 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/26 01:49:45 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 ---
   program:
     sleep:
-      cmd: 'ls -R .'
+      cmd: 'sleep 50'
       numprocs: 1
       autostart: True
       autorestart: "unexpected"
@@ -23,12 +23,11 @@
       stoptime: 3
       workingdir: '/Users/tango/42/taskmaster'
       umask: 644
-      stdout: '/Users/tango/42/taskmaster/lsfoo'
 
     sleeplonger:
       cmd: 'sleep 50'
       numprocs: 1
-      autostart: True
+      autostart: False
 
      # stderr: ./foo1.txt
    # sleeper:

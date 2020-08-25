@@ -1,9 +1,22 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    server.py                                          :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2020/08/25 03:25:13 by tango             #+#    #+#              #
+#    Updated: 2020/08/25 22:50:21 by ihwang           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 import socket
 import signal
 import struct
 import logging as log
 
-BUFF_SIZE = 2048
+from src.feedback import recvall, recv_one_message, send_one_message
+
 port_file = "/tmp/.TM_port_server"
 log_file = "/tmp/TM_log.txt"
 
@@ -31,24 +44,5 @@ class Server:
         self.get_config()
     
     def get_config(self):
-        self._config = self._conn.recv(BUFF_SIZE)
-    
-def recvall(conn, buflen):
-    buf = b''
-    while buflen:
-        newbuf = conn.recv(buflen)
-        if not newbuf: return None
-        buf += newbuf
-        buflen -= len(newbuf)
-    return buf
-
-def recv_one_message(conn):
-    lenbuf = recvall(conn, 4)
-    len_count, = struct.unpack('!I', lenbuf)
-    data = recvall(conn, len_count).decode()
-    return data
-
-def send_one_message(sock, data):
-    length = len(data)
-    sock.sendall(struct.pack("!I", length))
-    sock.sendall(data.encode())
+        self._config = self._conn.recv(2048)
+   
