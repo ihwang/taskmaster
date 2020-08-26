@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:25:13 by tango             #+#    #+#              #
-#    Updated: 2020/08/25 22:50:21 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/26 22:21:08 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,7 @@ import socket
 import signal
 import struct
 import logging as log
+import readline
 
 from src.feedback import recvall, recv_one_message, send_one_message
 
@@ -27,8 +28,22 @@ class Server:
                         datefmt="%Y-%m-%d %H:%M:%S",
                         filename=log_file)
     
-    def start(self):
-        log.info("server: Taskmaster daemon server is started")
+    def check_pre_exist_daemon(self):
+        try:
+            with open(port_file, "r", encoding="utf-8") as fd_port:
+                port_nb = int(fd_port.readline())
+                with socket.socket() as sock:
+                    try:
+                        sock.bind(("127.0.0.1", port_nb))
+                    except OSError:
+                        log.info("server: Detected attempting to boot again..")
+                        exit(1)
+        except FileNotFoundError:
+            pass
+
+    def boot_server(self):
+        self.check_pre_exist_daemon()
+        log.info("server: Taskmaster daemon server is on booting..")
         self._sock = socket.socket()
         self._sock.bind(("127.0.0.1", 0))
         host, port = self._sock.getsockname()

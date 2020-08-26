@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:24:58 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 02:53:53 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/26 19:33:29 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -39,12 +39,66 @@ class Execute:
         log.info("server: %(n)s\'s status has been requested to be sent to client", {"n": name})
         send_status(self._programs, name, server)
 
+    def start(self, name, server):
+        ever_started = False
+        for p in self._programs:
+            if p._name == name and p._start_status != "NotStarted":
+                feedback = name + " has been already started. Try \'restart\' or \'status\'"
+                send_one_message(server._conn, "feedback_start")
+                log.info("server: %(n)s has been already started.", {"n": name})
+                send_one_message(server._conn, feedback)
+                return
+            elif p._name == name:
+                log.info("server: The name of the program should be executed is %(pn)s", {"pn": p._name})
+                ever_started = True
+                threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
+        if ever_started is False:
+            log.info("server: Not able to find such program name")
+            send_one_message(server._conn, "feedback_start")
+            send_one_message(server._conn, "server: Not able to find such program name")
+
+    def restart(self, name, server):
+        ever_started = False
+        for p in self._programs:
+            if p._name == name and (p._start_status == "Exited" or p._start_status == "Stopped"):
+                log.info("server: The name of the program should be restart is %(pn)s", {"pn": p._name})
+                ever_started = True
+                threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
+            elif p._name == name and (p._start_status == "NotStarted" or p._start_status == "Running"):
+                feedback = name + " is on running or never started. Try \'status\' or \'start\'"
+                log.info("server: %(n)s is on running or never started.", {"n": name})
+                send_one_message(server._conn, "feedback_restart")
+                send_one_message(server._conn, feedback)
+                return
+        if ever_started is False:
+            log.info("server: Not able to find such program name")
+            send_one_message(server._conn, "feedback_restart")
+            send_one_message(server._conn, "Not able to find such program name")
+    
+    def stop(self, name, server):
+        ever_stopped = False
+        for p in self._programs:
+            if p._name == name and p._start_status == "Running":
+                log.info("server: The name of the program should be stopped is %(pn)s", {"pn": p._name})
+                p._start_status = "Stopped"
+                p._pid.terminate()
+                ever_stopped = True
+            elif p._name == name:
+                log.info("server: %(n)s is not running at this moment")
+                feedback = name + " is not running at this moment"
+                send_one_message(server._conn, "feedback_stop")
+                send_one_message(server._conn, feedback)
+                return
+        if ever_stopped is False:
+            log.info("server Not able to find such program name")
+            send_one_message(server._conn, "feedback_stop")
+            send_one_message(server._conn, "Not able to find such program name")
+
     def run_program(self, prog):
         retry_count = 0
         temp_umask = os.umask(prog._umask)
-
         while True:
-            redirect_stdout_stderr(prog)
+            self.redirect_stdout_stderr(prog)
             os.umask(prog._umask)
             prog._start_status = "Running"
             prog._pid = subprocess.Popen(prog._cmd,
@@ -80,41 +134,17 @@ class Execute:
             break
         os.umask(temp_umask)
 
-    def start(self, name, server):
-        ever_started = False
-        for p in self._programs:
-            if p._name == name and p._start_status != "NotStarted":
-                feedback = name + " has been already started. Try \'restart\' or \'status\'"
-                send_one_message(server._conn, "feedback_start")
-                log.info("server: %(n)s has been already started.", {"n": name})
-                send_one_message(server._conn, feedback)
-                return
-            elif p._name == name:
-                log.info("server: The name of the program should be executed is %(pn)s", {"pn": p._name})
-                ever_started = True
-                threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
-        if ever_started is False:
-            log.info("server: Not able to find such program name")
-            send_one_message(server._conn, "feedback_start")
-            send_one_message(server._conn, "server: Not able to find such program name")
-
-    def restart(self, name, server):
-        ever_started = False
-        for p in self._programs:
-            if p._name == name and p._start_status == "Exited":
-                log.info("server: The name of the program should be restart is %(pn)s", {"pn": p._name})
-                ever_started = True
-                threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
-            elif p._name == name and (p._start_status == "NotStarted" or p._start_status == "Running"):
-                feedback = name + " is on running or never started. Try \'status\' or \'start\'"
-                log.info("server: %(n)s is on running or never started.", {"n": name})
-                send_one_message(server._conn, "feedback_restart")
-                send_one_message(server._conn, feedback)
-                return
-        if ever_started is False:
-            log.info("server: Not able to find such program name")
-            send_one_message(server._conn, "feedback_restart")
-            send_one_message(server._conn, "server: Not able to find such program name")
+    def redirect_stdout_stderr(self, p):
+        if p._stdout == "discard":
+            p._stdout_fd = subprocess.DEVNULL
+        else:
+            p._stdout_fd = open(p._stdout, "a", encoding="utf-8")
+            os.chmod(p._stdout, 0o644)
+        if p._stderr == "discard":
+            p._stderr_fd = subprocess.DEVNULL
+        else:
+            p._stderr_fd = open(p._stderr, "a", encoding="utf-8")
+            os.chmod(p._stderr, 0o644)
 
     def auto_start(self, server):
         log.info("server: \'auto_start\' has been executed")
@@ -138,16 +168,4 @@ class Execute:
             elif job == "restart":
                 self.restart(name, server)
             elif job == "stop":
-                pass
-
-def redirect_stdout_stderr(program):
-    if program._stdout == "discard":
-        program._stdout_fd = subprocess.DEVNULL
-    else:
-        program._stdout_fd = open(program._stdout, "a", encoding="utf-8")
-        os.chmod(program._stdout, 0o644)
-    if program._stderr == "discard":
-        program._stderr_fd = subprocess.DEVNULL
-    else:
-        program._stderr_fd = open(program._stderr, "a", encoding="utf-8")
-        os.chmod(program._stderr, 0o644)
+                self.stop(name, server)

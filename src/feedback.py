@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:25:02 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 02:55:23 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/26 20:09:58 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,6 +15,7 @@ import logging as log
 import struct
 import sys
 import time
+import os
 
 def recvall(conn, buflen):
     buf = b''
@@ -38,13 +39,14 @@ def send_one_message(sock, data):
 
 def feedback_start(sock):
     information = recv_one_message(sock)
-    print(information)
+    print(information, file=sys.stderr)
 
 def feedback_status(sock):
     i = 0
     while True:
         name = recv_one_message(sock)
-        if name == "end_loop": break
+        if name == "end_loop":
+            break
         pid = recv_one_message(sock)
         status = recv_one_message(sock)
         if i == 0:
@@ -60,15 +62,25 @@ def feedback_status(sock):
 
 def feedback_restart(sock):
     information = recv_one_message(sock)
-    print(information)
-        
+    print(information, file=sys.stderr)
+
+def feedback_stop(sock):
+    information = recv_one_message(sock)
+    print(information, file=sys.stderr)
+
+
 def feedback_listener(sock):
     time.sleep(1)
     while True:
-        data = recv_one_message(sock)
-        if data == "feedback_start":
+        job = recv_one_message(sock)
+        if job == "feedback_start":
             feedback_start(sock)
-        elif data == "feedback_status":
+        elif job == "feedback_status":
             feedback_status(sock)
-        elif data == "feedback_restart":
+        elif job == "feedback_restart":
             feedback_restart(sock)
+        elif job == "feedback_stop":
+            feedback_stop(sock)
+        elif job == "disconnect":
+            log.info("client: the server is down")
+            os._exit(os.EX_NOHOST)

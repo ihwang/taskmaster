@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:24:41 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 02:34:41 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/26 21:57:36 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,7 @@ import logging as log
 import socket
 import threading
 import time
+from os import EX_NOHOST
 
 from src.feedback import *
 
@@ -34,8 +35,14 @@ class Client():
         with open(port_file, "r", encoding="utf-8") as fd:
             portnb = fd.readline()
         self._sock = socket.socket()
-        self._sock.connect(("127.0.0.1", int(portnb)))
-        log.info("client: Taskmaster control shell is connected to the server")
+        log.info("client: Trying to connect to the server")
+        try:
+            self._sock.connect(("127.0.0.1", int(portnb)))
+        except:
+            log.info("client: Unable to connect to the server")
+            print("taskmasterctl: \'taskmasterd.py\' should be launched first", file=sys.stderr)
+            exit(EX_NOHOST)
+        log.info("client: Taskmaster control shell has been connected to the server")
     
     def send_config(self, config):
         data = yaml.dump(config).encode("utf-8")
@@ -63,6 +70,7 @@ class Commands(cmd.Cmd):
 
     def do_reload(self, notused):
         'update the configuration file to the changed'
+        log.info("client: Request to reload")
         config = get_check_raw_yaml()
         if len(notused) > 0:
             print("taskmasterctl: Retry with no arguments", file=sys.stderr)
@@ -75,15 +83,16 @@ class Commands(cmd.Cmd):
 
     def do_status(self, name):
         'usage: status [programname]\nNo argument will get every single status'
+        log.info("client: Request to send status info of %(n)s", {"n": name})
         status = "status"
         send_one_message(self.client._sock, status)
-        log.debug("client: sent the server requesting status")
         send_one_message(self.client._sock, name)
         time.sleep(0.01)
 
     def do_start(self, name):
         'usage: start programname (with no whitespace)'
-        if len(name) < 1:
+        log.info("client: Request to execute %(n)s", {"n": name})
+        if len(name) == 0:
             print("usage: start programname", file=sys.stderr)
         elif " " in name:
             print("taskmasterctl: Possible to take only one arg", file=sys.stderr)
@@ -95,7 +104,8 @@ class Commands(cmd.Cmd):
 
     def do_restart(self, name):
         'usage: restart programname (with no whitespace)'
-        if len(name) < 1:
+        log.info("client: Request to restart %(n)s", {"n": name})
+        if len(name) == 0:
             print("usage: restart programname", file=sys.stderr)
         elif " " in name:
             print("taskmasterctl: Possible to take only one arg", file=sys.stderr)
@@ -106,7 +116,17 @@ class Commands(cmd.Cmd):
             time.sleep(0.01)
     
     def do_stop(self, name):
-        'stop'
+        'usage: stop programname (with no whitesppace)'
+        log.info("client: Request to stop %(n)s", {"n": name})
+        if len(name) == 0:
+            print("usage: restart programname", file=sys.stderr)
+        elif " " in name:
+            print("taskmasterctl: Possible to take only one arg", file=sys.stderr)
+        else:
+            stop = "stop"
+            send_one_message(self.client._sock, stop)
+            send_one_message(self.client._sock, name)
+            time.sleep(0.01)
 
 def find_space(raw_yaml):
     for key in raw_yaml["program"]:
@@ -116,8 +136,11 @@ def find_space(raw_yaml):
 
 def get_check_raw_yaml():
     with open(sys.argv[1], "rt") as stream:
-        raw_yaml = yaml.safe_load(stream)
-
+        try:
+            raw_yaml = yaml.safe_load(stream)
+        except:
+            print("taskmasterctl: Config file is not a yaml file", file=sys.stderr)
+            exit(1)
     wrong_name = find_space(raw_yaml)
     if "program" not in raw_yaml:
         print("taskmasterctl: Wrong config \'program:\' sholud be preceedded", file=sys.stderr)
