@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    programs.py                                        :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: tango <marvin@42.fr>                       +#+  +:+       +#+         #
+#    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:25:09 by tango             #+#    #+#              #
-#    Updated: 2020/08/25 03:25:09 by tango            ###   ########.fr        #
+#    Updated: 2020/08/28 23:53:39 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,27 +16,28 @@ import signal
 
 class Program:
     def __init__(self, name, cmd):
-        #Configurable
+
+        #Configurable values
         self._name = name
         self._cmd = cmd
         self._numprocs = 1
         self._autostart = False            #True/False
         self._autorestart = False          #True/False/"unexpected"
-        self._stdout = "discard"            #{Path}/"discard"
-        self._stderr = "discard"            #{Path}/"discard"
-        self._stopsignal = signal.SIGTERM      #def SIGTERM
+        self._stdout = "discard"           #[Path] or "discard"
+        self._stderr = "discard"           #[Path] or "discard"
+        self._workingdir = "/tmp"          #[Path]
+        self._stopsignal = signal.SIGTERM  #def: SIGTERM
+        self._env = os.environ             #True or False, if False: None
+        self._exitcode = 0           
+        self._starttime = 0            
+        self._startretries = 2              
         self._stoptime = 10
-        self._umask = 0o644                 #def 0o644
-        self._exitcode = 0             #def 0
-        self._starttime = 0              #def 0
-        self._startretries = 2                #def 2
-        self._workingdir = "/tmp"                   #{Path}
-        self._env = os.environ              #True/False, if False: None
+        self._umask = 0o644               
 
         #Internal values
+        self._start_status = "NotStarted"   #"NotStarted" or "Running" or "Exited"
         self._stdout_fd = None
         self._stderr_fd = None
-        self._start_status = "NotStarted"   #"NotStarted"/"Running"/"Exited"
         self._pid = None
 
 def deci_to_octal(nb):
@@ -103,6 +104,5 @@ def create_configured_programs(encoded_config):
                     else:
                         programs[-1]._umask = deci_to_octal(subvalue)
                 elif subkey == "autorestart":
-                    programs[-1]._auto_restart = subvalue
+                    programs[-1]._autorestart = subvalue
     return programs
-

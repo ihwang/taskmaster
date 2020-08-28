@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:24:58 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 19:33:29 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 00:19:36 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,11 +21,14 @@ from src.server import *
 from src.programs import *
 from src.status import *
 from src.feedback import recvall, recv_one_message, send_one_message
+from src.mailing import Mailing
 
 class Execute:
-    def __init__(self, programs):
+    def __init__(self, programs, stdin_out_err):
         self._programs = programs
+        self._stdin_out_err = stdin_out_err
         self.reload_status = False
+        self._mail = Mailing()
 
     def reload(self, server):
         self.reload_status = True
@@ -34,6 +37,15 @@ class Execute:
         self._programs = programs
         log.info("server: A config file has been reloaded")
         self.auto_start(server)
+
+    def setmail(self, server):
+        myaddr = recv_one_message(server._conn)
+        myaddr_pswd = recv_one_message(server._conn)
+        toaddr = recv_one_message(server._conn)
+        self._mail.setmail(myaddr, myaddr_pswd, toaddr)
+    
+    def unsetmail(self):
+        self._mail.unsetmail()
 
     def status(self, name, server):
         log.info("server: %(n)s\'s status has been requested to be sent to client", {"n": name})
@@ -45,7 +57,7 @@ class Execute:
             if p._name == name and p._start_status != "NotStarted":
                 feedback = name + " has been already started. Try \'restart\' or \'status\'"
                 send_one_message(server._conn, "feedback_start")
-                log.info("server: %(n)s has been already started.", {"n": name})
+                log.warning("server: %(n)s has been already started.", {"n": name})
                 send_one_message(server._conn, feedback)
                 return
             elif p._name == name:
@@ -53,7 +65,7 @@ class Execute:
                 ever_started = True
                 threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
         if ever_started is False:
-            log.info("server: Not able to find such program name")
+            log.warning("server: Not able to find such program name")
             send_one_message(server._conn, "feedback_start")
             send_one_message(server._conn, "server: Not able to find such program name")
 
@@ -66,12 +78,12 @@ class Execute:
                 threading.Thread(target=self.run_program, args=(p,), daemon=True).start()
             elif p._name == name and (p._start_status == "NotStarted" or p._start_status == "Running"):
                 feedback = name + " is on running or never started. Try \'status\' or \'start\'"
-                log.info("server: %(n)s is on running or never started.", {"n": name})
+                log.warning("server: %(n)s is on running or never started.", {"n": name})
                 send_one_message(server._conn, "feedback_restart")
                 send_one_message(server._conn, feedback)
                 return
         if ever_started is False:
-            log.info("server: Not able to find such program name")
+            log.warning("server: Not able to find such program name")
             send_one_message(server._conn, "feedback_restart")
             send_one_message(server._conn, "Not able to find such program name")
     
@@ -84,16 +96,16 @@ class Execute:
                 p._pid.terminate()
                 ever_stopped = True
             elif p._name == name:
-                log.info("server: %(n)s is not running at this moment")
+                log.warning("server: %(n)s is not running at this moment")
                 feedback = name + " is not running at this moment"
                 send_one_message(server._conn, "feedback_stop")
                 send_one_message(server._conn, feedback)
                 return
         if ever_stopped is False:
-            log.info("server Not able to find such program name")
+            log.warning("server: Not able to find such program name")
             send_one_message(server._conn, "feedback_stop")
             send_one_message(server._conn, "Not able to find such program name")
-
+        
     def run_program(self, prog):
         retry_count = 0
         temp_umask = os.umask(prog._umask)
@@ -114,22 +126,28 @@ class Execute:
                 log.info("server: %(n)s has been successfully launched", {"n": prog._name})
                 flag_timeout = True
                 prog._pid.wait()
-                log.info("server: %(n)s has been successfully terminated", {"n": prog._name})
+                log.info("server: %(n)s has been terminated", {"n": prog._name})
             else:
-                log.info("server: %(n)s failed. Terminated in \'starttime\' %(s)d sec", {"n": prog._name, "s": prog._starttime})
+                log.error("server: %(n)s failed. Terminated in \'starttime\' %(s)d sec", {"n": prog._name, "s": prog._starttime})
                 flag_timeout = False
             prog._start_status = "Exited"
-            if self.reload_status is True:
+            if prog._exitcode != prog._pid.returncode and self._mail._enabled == True:
+                ret = self._mail.sendmail(prog)
+            if ret == 1:
+                log.warning("server: Failed to send a email")
+            else:
+                log.warning("server: An email has been sent to %(addr)s", {"addr": self._myaddr})
+            if self.reload_status is True and prog._autorestart == True:
                 log.info("server: %(n)s will not be restarted since the config has been reloaded")
                 break
             elif prog._autorestart == True:
-                log.info("server: Trying to restart %(n)s since \'autorestart\' option has been given", {"n": prog._name})
+                log.error("server: Trying to restart %(n)s since \'autorestart\' option has been given", {"n": prog._name})
                 continue
             elif prog._autorestart == "unexpected":
                 if retry_count < prog._startretries and \
                     (prog._exitcode != prog._pid.returncode or flag_timeout is False):
                     retry_count += 1
-                    log.info("server: Trying to restart %(n)s since \'exitcode\' is not matched", {"n": prog._name})
+                    log.error("server: Trying to restart %(n)s since \'exitcode\' is not matched", {"n": prog._name})
                     continue
             break
         os.umask(temp_umask)
@@ -159,6 +177,10 @@ class Execute:
         log.info("server: The requested job is %(job)s", {"job": job})
         if job == "reload":
             self.reload(server)
+        elif job == "setmail":
+            self.setmail(server)
+        elif job == "unsetmail":
+            self.unsetmail()
         else:
             name = recv_one_message(server._conn)
             if job == "status":

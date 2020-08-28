@@ -1,22 +1,23 @@
 # **************************************************************************** #
 #                                                                              #
 #                                                         :::      ::::::::    #
-#    example.yaml                                       :+:      :+:    :+:    #
+#    sleep.yaml                                         :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/12 13:42:40 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 01:49:45 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/28 23:39:02 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 ---
   program:
     sleep:
-      cmd: 'sleep 50'
+      cmd: 'sleep 5'
       numprocs: 1
       autostart: True
       autorestart: "unexpected"
+      exitcode: 3
       startretries: 5
       starttime: 0
       stopsignal: "INT"

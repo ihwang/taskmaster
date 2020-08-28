@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:24:41 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 21:57:36 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 00:08:50 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,7 @@ import logging as log
 import socket
 import threading
 import time
+import getpass
 from os import EX_NOHOST
 
 from src.feedback import *
@@ -32,14 +33,20 @@ class Client():
                         filename=log_file)
         log.info("client: Taskmaster control shell is started")
 
-        with open(port_file, "r", encoding="utf-8") as fd:
-            portnb = fd.readline()
+        try:
+            fd = open(port_file, "r", encoding="utf-8")
+        except FileNotFoundError:
+            print("taskmasterctl: \'taskmasterd.py\' should be ", end="", file=sys.stderr)
+            print("launched first (" + port_file + " doesn't exsist)", file=sys.stderr)
+            exit(EX_NOHOST)
+        portnb = fd.readline()
+        fd.close()
         self._sock = socket.socket()
         log.info("client: Trying to connect to the server")
         try:
             self._sock.connect(("127.0.0.1", int(portnb)))
         except:
-            log.info("client: Unable to connect to the server")
+            log.error("client: Unable to connect to the server")
             print("taskmasterctl: \'taskmasterd.py\' should be launched first", file=sys.stderr)
             exit(EX_NOHOST)
         log.info("client: Taskmaster control shell has been connected to the server")
@@ -127,6 +134,22 @@ class Commands(cmd.Cmd):
             send_one_message(self.client._sock, stop)
             send_one_message(self.client._sock, name)
             time.sleep(0.01)
+    
+    def do_setmail(self, name):
+        'Setting email accounts for sending and receiving the result of executions'
+        log.info("client: Request to set email addresses")
+        my_addr = input("Your email Address: ")
+        passwd = getpass.getpass()
+        to_addr = input("The recipient's Address: ")
+        send_one_message(self.client._sock, "setmail")
+        send_one_message(self.client._sock, my_addr)
+        send_one_message(self.client._sock, passwd)
+        send_one_message(self.client._sock, to_addr)
+    
+    def do_unsetmail(self, name):
+        'Unset pre-configured email address'
+        log.info("client: Request to unset email addresses")
+        send_one_message(self.client._sock, "unsetmail")
 
 def find_space(raw_yaml):
     for key in raw_yaml["program"]:
@@ -135,12 +158,11 @@ def find_space(raw_yaml):
     return False
 
 def get_check_raw_yaml():
+    if sys.argv[1][-5:] != ".yaml":
+        print("taskmasterctl: The config file is not a yaml file", file=sys.stderr)
+        return False
     with open(sys.argv[1], "rt") as stream:
-        try:
             raw_yaml = yaml.safe_load(stream)
-        except:
-            print("taskmasterctl: Config file is not a yaml file", file=sys.stderr)
-            exit(1)
     wrong_name = find_space(raw_yaml)
     if "program" not in raw_yaml:
         print("taskmasterctl: Wrong config \'program:\' sholud be preceedded", file=sys.stderr)

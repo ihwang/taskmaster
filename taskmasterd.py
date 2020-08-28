@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:24:46 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 21:58:56 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 00:10:25 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,11 +29,11 @@ server = None
 execute = None
 
 def stopsignal_handler(signum, frame):
-    log.info("server: Detected %(sig)d signal has been sent", {"sig": signum})
+    log.warning("server: Detected %(sig)d signal has been sent", {"sig": signum})
     global g_programs
     for p in g_programs:
         if p._stopsignal == signum:
-            log.info("server: %(pid)d will be stopeed after %(sec)d sec", {"pid": p._pid.pid, "sec": p._stoptime})
+            log.warning("server: %(pid)d will be stopeed after %(sec)d sec", {"pid": p._pid.pid, "sec": p._stoptime})
             try:
                 p._pid.wait(p._stoptime)
             except subprocess.TimeoutExpired:
@@ -42,36 +42,36 @@ def stopsignal_handler(signum, frame):
 def listen_sighup(signum, frame):
     global g_programs
     global server
-    log.info("server: Detected %(sig)d signal has been sent", {"sig": signum})
+    log.warning("server: Detected %(sig)d signal has been sent", {"sig": signum})
     g_programs = create_configured_programs(server._config)
     execute.load_programs(g_programs)
     execute.auto_start(server)
 
 def listen_sigterm(signum, frame):
-    log.info("server: Detected %(sig)d signal has been sent", {"sig": signum})
+    log.warning("server: Detected %(sig)d signal has been sent", {"sig": signum})
     global g_programs
     global server
     for p in g_programs:
         if p._stopsignal == signum and p._start_status == "Running":
-            log.info("server: %(n)s(%(p)s) will be terminated by daemon", {"n": p._name, "p": str(p._pid.pid)})
+            log.warning("server: %(n)s(%(p)s) will be terminated by daemon", {"n": p._name, "p": str(p._pid.pid)})
             p._pid.terminate()
-            log.info("server: %(n)s(%(p)s) was killed", {"n": p._name, "p": str(p._pid.pid)})
-    log.info("server: cut the connection with client")
+            log.warning("server: %(n)s(%(p)s) was killed", {"n": p._name, "p": str(p._pid.pid)})
+    log.warning("server: cut the connection with client")
     send_one_message(server._conn, "disconnect")
-    log.info("server: taskmaster daemon will be terminated")
+    log.warning("server: taskmaster daemon will be terminated")
     exit(0)
 
 def listen_other_signals(signum, frame):
-    log.info("server: Detected %(sig)d signal has been sent", {"sig": signum})
+    log.warning("server: Detected %(sig)d signal has been sent", {"sig": signum})
     global g_programs
     for p in g_programs:
         if p._stopsignal == signum and p._start_status == "Running":
-            log.info("server: %(pid)d will be stoped after %(sec)d sec", {"pid": p._pid.pid, "sec": p._stoptime})
+            log.warning("server: %(pid)d will be stoped after %(sec)d sec", {"pid": p._pid.pid, "sec": p._stoptime})
             try:
                 p._pid.wait(p._stoptime)
             except subprocess.TimeoutExpired:
                 p._pid.terminate()
-                log.info("server: %(n)s(%(p)s) was killed", {"n": p._name, "p": str(p._pid.pid)})
+                log.warning("server: %(n)s(%(p)s) was killed", {"n": p._name, "p": str(p._pid.pid)})
 
 def listen_signals():
     signal.signal(signal.SIGHUP, listen_sighup)
@@ -84,12 +84,12 @@ def main():
     global server
     global execute
 
-    go_daemon()
+    stdin_out_err = go_daemon()
     server = Server()
     server.boot_server()
     g_programs = create_configured_programs(server._config)
     log.info("server: A config file has been loaded")
-    execute = Execute(g_programs)
+    execute = Execute(g_programs, stdin_out_err)
     execute.auto_start(server)
     listen_signals()
 
