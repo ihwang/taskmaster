@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:25:13 by tango             #+#    #+#              #
-#    Updated: 2020/08/26 22:21:08 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 17:04:40 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -60,4 +60,5 @@ class Server:
     
     def get_config(self):
         self._config = self._conn.recv(2048)
+        log.debug("server: received a config file")
    

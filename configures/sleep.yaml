@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/12 13:42:40 by tango             #+#    #+#              #
-#    Updated: 2020/08/28 23:39:02 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 22:47:27 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,39 +14,21 @@
   program:
     sleep:
       cmd: 'sleep 5'
-      numprocs: 1
+      numprocs: 2
       autostart: True
       autorestart: "unexpected"
       exitcode: 3
-      startretries: 5
+      startretries: 2
       starttime: 0
       stopsignal: "INT"
       stoptime: 3
       workingdir: '/Users/tango/42/taskmaster'
       umask: 644
+      env:
+        foo: "bar"
+        foofoo: "barbar"
 
     sleeplonger:
       cmd: 'sleep 50'
       numprocs: 1
       autostart: False
-
-     # stderr: ./foo1.txt
-   # sleeper:
-   #   cmd: 'rm noexist'
-   #   cmd_amt: 4
-     # expected_exit: 0
-     # auto_restart: "unexpected"
-     # retry_time: 3
-     # stdout: ./foo2.txt
-     # stderr: ./foo2.txt
-     # auto_start: true
-    #mv:
-    #  cmd: 'mv'
-    #  cmd_amt: 5
-    #  expected_exit: -64
-    #  auto_restart: "unexpected"
-    #  retry_time: 3
-    #  stdout: ./foo.txt
-    #  stderr: ./foo.txt
-    #  auto_start: true
-

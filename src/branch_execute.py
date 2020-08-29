@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:24:58 by tango             #+#    #+#              #
-#    Updated: 2020/08/29 00:19:36 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 16:51:37 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -133,10 +133,10 @@ class Execute:
             prog._start_status = "Exited"
             if prog._exitcode != prog._pid.returncode and self._mail._enabled == True:
                 ret = self._mail.sendmail(prog)
-            if ret == 1:
-                log.warning("server: Failed to send a email")
-            else:
-                log.warning("server: An email has been sent to %(addr)s", {"addr": self._myaddr})
+                if ret == 1:
+                    log.warning("server: Failed to send a email")
+                else:
+                    log.warning("server: An email has been sent to %(addr)s", {"addr": self._myaddr})
             if self.reload_status is True and prog._autorestart == True:
                 log.info("server: %(n)s will not be restarted since the config has been reloaded")
                 break

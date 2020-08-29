@@ -6,13 +6,14 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:25:09 by tango             #+#    #+#              #
-#    Updated: 2020/08/28 23:53:39 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 22:39:06 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 import os
 import yaml
 import signal
+from copy import deepcopy
 
 class Program:
     def __init__(self, name, cmd):
@@ -61,6 +62,8 @@ def get_signum(subvalue):
             return sigset[key]
 
 def create_configured_programs(encoded_config):
+    import sys
+
     raw_yaml = yaml.safe_load(encoded_config.decode())
     programs = list()
     for key, value in raw_yaml["program"].items():
@@ -94,8 +97,11 @@ def create_configured_programs(encoded_config):
                 elif subkey == "stoptime":
                     programs[-1]._stoptime = subvalue
                 elif subkey == "env":
-                    if subvalue == False:
-                        programs[-1]._env = None
+                    if type(subvalue) is dict:
+                        new_env = deepcopy(os.environ)
+                        for item in subvalue:
+                            new_env[item] = subvalue[item]
+                        programs[-1]._env = new_env
                 elif subkey == "workingdir":
                     programs[-1]._workingdir = subvalue
                 elif subkey == "umask":

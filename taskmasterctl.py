@@ -6,7 +6,7 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/25 03:24:41 by tango             #+#    #+#              #
-#    Updated: 2020/08/29 00:08:50 by ihwang           ###   ########.fr        #
+#    Updated: 2020/08/29 22:17:52 by ihwang           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -61,7 +61,6 @@ class Commands(cmd.Cmd):
         self.intro = "\nWelcome to Taskmaster. Try \'help\' or \'?\' to see the available commands"
         self.prompt = "Taskmaster$> "
         self.doc_header = "Availiable commands"
-        #self._reload_status = False
         cmd.Cmd.emptyline(self)
 
         self.client = client
@@ -79,6 +78,7 @@ class Commands(cmd.Cmd):
         'update the configuration file to the changed'
         log.info("client: Request to reload")
         config = get_check_raw_yaml()
+        log.debug("client: successful reading yaml")
         if len(notused) > 0:
             print("taskmasterctl: Retry with no arguments", file=sys.stderr)
         if config == False:
@@ -135,7 +135,7 @@ class Commands(cmd.Cmd):
             send_one_message(self.client._sock, name)
             time.sleep(0.01)
     
-    def do_setmail(self, name):
+    def do_setemail(self, name):
         'Setting email accounts for sending and receiving the result of executions'
         log.info("client: Request to set email addresses")
         my_addr = input("Your email Address: ")
@@ -146,7 +146,7 @@ class Commands(cmd.Cmd):
         send_one_message(self.client._sock, passwd)
         send_one_message(self.client._sock, to_addr)
     
-    def do_unsetmail(self, name):
+    def do_unsetemail(self, name):
         'Unset pre-configured email address'
         log.info("client: Request to unset email addresses")
         send_one_message(self.client._sock, "unsetmail")
