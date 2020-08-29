@@ -1,5 +1,5 @@
 # Welcome to taskmaster 👋
-> Taskmaster is a task-management python script that is structured as a server daemon and client control shell. Made on the purpose of self-learning python.
+> Taskmaster is a process management python script that is structured as a server daemon and client control shell. Made on the purpose of self-learning python.
 
 #### Dependancy
 - Python 3.8.0
