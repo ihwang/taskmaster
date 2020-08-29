@@ -22,7 +22,7 @@ Launch ctrl-shell with a configuration file
 ```sh
 python taskmasterctl.py config.yaml
 ```
-Set an email address to get informed of the result of your process
+Set an email address to get informed about the result of your process
 ```sh
 setemail
 ```
