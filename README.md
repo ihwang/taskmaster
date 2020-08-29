@@ -13,7 +13,7 @@
 ![ezgif com-crop](https://user-images.githubusercontent.com/47879168/91639657-1690e080-ea53-11ea-9137-06fb5fe52464.gif)
 ![ezgif com-gif-maker (1)](https://user-images.githubusercontent.com/47879168/91639668-2c060a80-ea53-11ea-9542-d1e33efd30ac.gif)
 
-## Getting start
+## Getting started
 Launch server first
 ```sh
 python taskmasterd.py
