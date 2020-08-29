@@ -39,7 +39,7 @@ program:                # mandatory
     startretries: 3                 # 2 by default
     starttime: 10                   # 0 by default
     stopsignal: "TERM"              # "TERM", "QUIT" or "INT". "TERM" by default
-    stdout: "/tmp"                  # "/path/name" or "discard" by default
+    stdout: "/tmp/sleep_stdout"     # "/path/name" or "discard" by default
     stderr: "discard"               # same with stdout
     env:                            # 'key: value' format. environ by default
       foo1: "bar1"
