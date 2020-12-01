@@ -1,5 +1,5 @@
 # Welcome to taskmaster 👋
-> Taskmaster is a task-management python script that is structured as a server daemon and client control shell. Made on the purpose of self-learning python.
+> Taskmaster is a process management python script that is structured as a server daemon and client control shell. Made on the purpose of self-learning on python.
 
 #### Dependancy
 - Python 3.8.0
@@ -8,7 +8,12 @@
 #### Install
 - No installation required
 
-## Getting start
+## Overview
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/47879168/91639615-de899d80-ea52-11ea-97fd-7a7f383206af.gif)
+![ezgif com-crop](https://user-images.githubusercontent.com/47879168/91639657-1690e080-ea53-11ea-9137-06fb5fe52464.gif)
+![ezgif com-gif-maker (1)](https://user-images.githubusercontent.com/47879168/91639668-2c060a80-ea53-11ea-9542-d1e33efd30ac.gif)
+
+## Getting started
 Launch server first
 ```sh
 python taskmasterd.py
@@ -16,6 +21,10 @@ python taskmasterd.py
 Launch ctrl-shell with a configuration file
 ```sh
 python taskmasterctl.py config.yaml
+```
+Set an email address to get informed about the result of your process
+```sh
+setemail
 ```
 
 ## Example config
@@ -34,7 +43,7 @@ program:                # mandatory
     startretries: 3                 # 2 by default
     starttime: 10                   # 0 by default
     stopsignal: "TERM"              # "TERM", "QUIT" or "INT". "TERM" by default
-    stdout: "/tmp"                  # "/path/name" or "discard" by default
+    stdout: "/tmp/sleep_stdout"     # "/path/name" or "discard" by default
     stderr: "discard"               # same with stdout
     env:                            # 'key: value' format. environ by default
       foo1: "bar1"
