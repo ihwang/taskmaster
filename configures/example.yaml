@@ -1,44 +1,18 @@
 ---
- program:
-   sleep:
-     cmd: "sleep 1000", mandatory
-     numprocs: 10, 1 by default
-     umask: 022, 022 by default
-     workingdir: (pathname), the current by default
-     autostart: true/false, True by default
-     autorestart: always/never/"unexpected", never by default
-     exitcode: none/(specific code), 0 by default
-     startretries: 3, 3 by default
-     starttime: 5, 5 by default
-     stopsignal: TERM/QUIT/INT/, TERM by default
-     stoptime:
-     stdout: (pathname), none(discard) by default
-     stderr: (pathname), none(discard) by default
-	   env: true/false, true by default
-
- commandsToImplement:
-   status: see the status of all the programs described in the config file
-   start: program
-   restart: program
-   stop: program
-   exit: exit taskmaster
-   reload: reload configfile
-
-   funcs:
-   - status
-	 - start
-	 - restart
-	 - stop
-	 - reload
-	 - exit
-	  - helps
-
-#needs relattionship
-name:
-  - programs
-cmd:
-  - programs
-cmd_amd:
-  - 
-
-- tokenizing string: shlex.split
+program:                # mandatory
+  sleep:                # mandatory
+    cmd: "sleep 10"                 # mandatory
+    numprocs: 3                     # 1 by default
+    umask: 022                      # (int) 022 by default
+    workingdir: "/Users/tango/"     # "/tmp" by default
+    autostart: False                # False by default
+    autorestart: False              # True, False or "unexpected". False by default
+    exitcode: 1                     # 0 by default
+    startretries: 3                 # 2 by default
+    starttime: 10                   # 0 by default
+    stopsignal: "TERM"              # "TERM", "QUIT" or "INT". "TERM" by default
+    stdout: "/tmp"                  # "/path/name" or "discard" by default
+    stderr: "discard"               # same with stdout
+    env:                            # 'key: value' format. environ by default
+      foo1: "bar1"
+      foo2: "bar2"

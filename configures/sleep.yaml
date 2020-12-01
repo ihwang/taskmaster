@@ -6,29 +6,13 @@
 #    By: ihwang <ihwang@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/08/12 13:42:40 by tango             #+#    #+#              #
-#    Updated: 2020/08/29 22:47:27 by ihwang           ###   ########.fr        #
+#    Updated: 2020/09/17 21:36:16 by tango            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 ---
   program:
-    sleep:
-      cmd: 'sleep 5'
-      numprocs: 2
-      autostart: True
-      autorestart: "unexpected"
-      exitcode: 3
-      startretries: 2
-      starttime: 0
-      stopsignal: "INT"
-      stoptime: 3
-      workingdir: '/Users/tango/42/taskmaster'
-      umask: 644
-      env:
-        foo: "bar"
-        foofoo: "barbar"
-
     sleeplonger:
-      cmd: 'sleep 50'
+      cmd: 'sleep 300'
       numprocs: 1
-      autostart: False
+      autostart: True
