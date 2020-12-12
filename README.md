@@ -1,6 +1,9 @@
 # Welcome to taskmaster 👋
 > Taskmaster is a process-management python script that is separated to server(daemon) and client control shell. This project led me to write codes for this application concurrently with learning python as a new language. In addition to that, I got practical usages of multi-threading, socket programming, and daemon process within making taskmaster.
 
+
+<span style="color:grey">Note: Some of text-editing would possibly not work on gnome-terminal emulator</span>.
+
 #### Dependancy
 - Python 3.8.0
 
