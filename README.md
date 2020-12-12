@@ -1,12 +1,11 @@
 # Welcome to taskmaster 👋
-> Taskmaster is a process management python script that is structured as a server daemon and client control shell. Made on the purpose of self-learning on python.
+> Taskmaster is a process-management python script that is separated to server(daemon) and client control shell. This project led me to write codes for this application concurrently with learning python as a new language.
 
 #### Dependancy
 - Python 3.8.0
 
-
 #### Install
-- No installation required
+- No installation or external library required
 
 ## Overview
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/47879168/91639615-de899d80-ea52-11ea-97fd-7a7f383206af.gif)
@@ -66,4 +65,4 @@ program:                # mandatory
 👤 **ihwang**
 
 * Github: [@ihwang](https://github.com/ihwang)
-* LinkedIn: [@Intaek Hwang](https://www.linkedin.com/in/intaek-hwang-30161b196/)
+* LinkedIn: [@Intaek Hwang](https://www.linkedin.com/in/intaek/)
