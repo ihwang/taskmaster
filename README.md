@@ -28,7 +28,7 @@ Set an email address to get informed about the result of your process
 ```sh
 setemail
 ```
-> foo
+
 ## Example config
 Unnecessary configs can be omitted and will be setting to default
 ```yaml
